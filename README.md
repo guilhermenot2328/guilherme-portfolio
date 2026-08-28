@@ -121,19 +121,38 @@ Sem ela, cai no `mailto:` automaticamente. Validação com `react-hook-form` + `
 
 ---
 
-## Deploy na Vercel
+## Deploy na Netlify
 
-1. Suba o repositório para o GitHub.
-2. Em <https://vercel.com/new>, importe o repositório. A Vercel detecta o Next.js sozinho —
-   não precisa mudar build command nem output directory.
-3. Em **Settings → Environment Variables**, adicione:
+A configuração de build já está versionada em [`netlify.toml`](netlify.toml) — build command,
+publish directory, versão do Node, o plugin do Next.js e os cabeçalhos de cache e segurança.
+Você não precisa preencher nada disso na interface.
+
+1. Em <https://app.netlify.com/start>, conecte o GitHub e escolha o repositório.
+2. A Netlify lê o `netlify.toml` e preenche os campos sozinha. Confira apenas que ficou:
+   - **Build command:** `npm run build`
+   - **Publish directory:** `.next`
+3. Em **Site configuration → Environment variables**, adicione:
    - `NEXT_PUBLIC_SITE_URL` — a URL final (ex.: `https://guilherme.dev`). Ela alimenta o
-     `metadataBase`, o `sitemap.xml`, o `robots.txt` e o JSON-LD.
+     `metadataBase`, o `sitemap.xml`, o `robots.txt` e o JSON-LD. **Sem ela tudo aponta para
+     o placeholder** — é a variável mais importante de configurar.
    - `NEXT_PUBLIC_CONTACT_ENDPOINT` — só se você for usar um endpoint de contato.
-4. Deploy. Para domínio próprio: **Settings → Domains**.
+
+   Marque as duas para **todos os deploy contexts** (production, deploy previews e branch
+   deploys), senão os previews geram metadata com a URL errada.
+4. **Deploy site.** Para domínio próprio: **Domain management → Add a domain**.
 
 Depois do primeiro deploy, atualize também o campo `url` em `data/site.ts` (ele é o fallback
 quando a env var não está definida).
+
+A partir daí, todo `git push` na `main` dispara um deploy novo, e cada Pull Request ganha um
+deploy preview.
+
+### O que a Netlify faz por baixo
+
+O **Next.js Runtime v5** roda as Server Components e as rotas dinâmicas do App Router
+(`icon`, `opengraph-image`, `sitemap.xml`, `robots.txt`) em Netlify Functions, e redireciona
+o `next/image` para o **Netlify Image CDN** — a otimização de imagem não usa o `sharp` do
+projeto em produção, ele só é usado pelo script `npm run images`, na sua máquina.
 
 ---
 
