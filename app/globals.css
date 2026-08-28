@@ -1,0 +1,204 @@
+@import "tailwindcss";
+
+/* Dark mode por classe no <html> (definida antes da hidratacao por theme-script). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Design tokens
+   Estetica: quase-preto, off-white, UM unico acento vibrante (lima).
+   Grid base de 8px -> use apenas multiplos pares da escala do Tailwind
+   (2 = 8px, 4 = 16px, 6 = 24px, 8 = 32px, 12 = 48px, 16 = 64px, 24 = 96px).
+--------------------------------------------------------------------------- */
+:root {
+  --background: #fafaf9;
+  --surface: #ffffff;
+  --foreground: #0a0a0a;
+  --muted: #5c5c5c;
+  --border: rgb(10 10 10 / 0.1);
+  /* Variante escurecida do acento para passar contraste sobre fundo claro. */
+  --accent: #4d6b00;
+  --accent-contrast: #fafafa;
+  --grid-line: rgb(10 10 10 / 0.05);
+}
+
+.dark {
+  --background: #0a0a0a;
+  --surface: #0f0f0f;
+  --foreground: #ededed;
+  --muted: #8a8a8a;
+  --border: rgb(237 237 237 / 0.1);
+  --accent: #cdff4a;
+  --accent-contrast: #0a0a0a;
+  --grid-line: rgb(237 237 237 / 0.045);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", monospace;
+
+  /* Escala tipografica de display, com tracking negativo agressivo. */
+  --text-display: clamp(3.5rem, 14vw, 11rem);
+  --text-display--line-height: 0.86;
+  --text-display--letter-spacing: -0.045em;
+
+  --text-headline: clamp(2rem, 5.5vw, 3.5rem);
+  --text-headline--line-height: 1.04;
+  --text-headline--letter-spacing: -0.03em;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    /* O scroll suave real vem do Lenis; isto e o fallback (e o caminho usado
+       quando prefers-reduced-motion esta ativo e o Lenis fica desligado). */
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* Foco visivel e consistente no teclado (sem anel no clique de mouse). */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--accent-contrast);
+  }
+
+  /* Ancoras de scroll ficam abaixo da navbar fixa. */
+  section[id] {
+    scroll-margin-top: 96px;
+  }
+}
+
+@layer utilities {
+  /* Malha tecnica sutil usada como textura de fundo em secoes. */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Placeholder de projeto sem print: malha + gradiente monocromatico + acento.
+     A malha vem embutida aqui (com background-size por camada) em vez de
+     compor com .bg-grid: as duas classes definem background-image, e a que
+     vencer a cascata levaria junto o background-size da outra, ladrilhando o
+     gradiente. */
+  .placeholder-gradient {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px),
+      radial-gradient(
+        120% 90% at 20% 0%,
+        color-mix(in srgb, var(--accent) 20%, transparent) 0%,
+        transparent 58%
+      ),
+      linear-gradient(150deg, var(--surface) 0%, var(--background) 100%);
+    background-size:
+      48px 48px,
+      48px 48px,
+      100% 100%,
+      100% 100%;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion: desliga parallax, cursor custom e animacoes longas.
+   Os componentes tambem leem `useReducedMotion()`; isto e a rede de seguranca
+   para qualquer transicao CSS remanescente.
+--------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Card de serviço: spotlight que segue o mouse + tilt 3D.
+
+   Tudo dirigido por custom properties (--spot-x/--spot-y/--rx/--ry) que o JS
+   escreve direto no style do elemento. O React nunca re-renderiza no
+   pointermove, e só `transform` e `opacity` mudam.
+--------------------------------------------------------------------------- */
+@layer components {
+  .spotlight-card {
+    --spot-x: 50%;
+    --spot-y: 0%;
+    --rx: 0deg;
+    --ry: 0deg;
+
+    position: relative;
+    isolation: isolate;
+    transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));
+    transition:
+      transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 260ms ease;
+  }
+
+  .spotlight-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 240ms ease;
+    background: radial-gradient(
+      340px circle at var(--spot-x) var(--spot-y),
+      color-mix(in srgb, var(--accent) 16%, transparent) 0%,
+      transparent 68%
+    );
+  }
+
+  .spotlight-card:hover::before,
+  .spotlight-card:focus-within::before {
+    opacity: 1;
+  }
+
+  .spotlight-card:hover,
+  .spotlight-card:focus-within {
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spotlight-card {
+    transform: none !important;
+  }
+}
