@@ -19,6 +19,13 @@ import path from "node:path";
 const SRC_DIR = "images";
 const OUT_DIR = "assets";
 
+/**
+ * Originais que ficam guardados em `images/` mas NAO devem gerar .webp —
+ * fotos antigas que sairam do site. Sem isto o fallback automatico la embaixo
+ * geraria um arquivo orfao em `assets/` a cada execucao.
+ */
+const SKIP = new Set(["WhatsApp Image 2023-11-03 at 10.13.08.jpeg"]);
+
 /** Largura maxima permitida para qualquer imagem gerada. */
 const MAX_WIDTH = 1600;
 
@@ -37,9 +44,9 @@ const MANIFEST = [
   },
   {
     // Foto usada no Chromatic Image da secao "Sobre mim".
-    source: "WhatsApp Image 2023-11-03 at 10.13.08.jpeg",
+    source: "479b2a22-d6e0-4b44-9706-49cc244b9137.jpg",
     out: "guilherme-about",
-    crop: { left: 96, top: 176, width: 620, height: 775 },
+    crop: { left: 0, top: 555, width: 580, height: 725 },
     quality: 88,
   },
   // TODO: adicionar prints dos projetos aqui quando existirem, ex.:
@@ -96,7 +103,7 @@ async function build() {
 
   // Qualquer imagem nao mapeada vira um webp generico (max 1600px, sem crop).
   for (const file of available) {
-    if (consumed.has(file)) continue;
+    if (consumed.has(file) || SKIP.has(file)) continue;
     if (!/\.(jpe?g|png|webp|avif|tiff?)$/i.test(file)) continue;
 
     const out = file

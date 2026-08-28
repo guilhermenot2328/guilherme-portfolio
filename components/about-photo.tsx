@@ -19,7 +19,7 @@ const ChromaticImage = dynamic(
 );
 
 const ALT =
-  "Guilherme de terno, sorrindo, em um campo com balões de ar quente ao fundo";
+  "Guilherme de camiseta branca e óculos escuros, sorrindo, apoiado no parapeito de uma ponte sobre um canal, com as fachadas de um parque temático ao fundo";
 
 export function AboutPhoto() {
   const prefersReducedMotion = useReducedMotion();

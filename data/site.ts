@@ -12,8 +12,9 @@ export const site = {
   locality: "Boituva",
   region: "SP",
   country: "BR",
-  // TODO: trocar pelo domínio real antes do deploy (usado em metadata, sitemap e robots).
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://guilherme.dev",
+  // Fallback usado quando NEXT_PUBLIC_SITE_URL não está definida.
+  // Alimenta metadata, sitemap, robots e JSON-LD — troque se migrar de domínio.
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://guilherme-port.netlify.app",
 } as const;
 
 /**
